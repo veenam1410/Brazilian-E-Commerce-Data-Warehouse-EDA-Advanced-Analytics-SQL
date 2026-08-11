@@ -1,1 +1,249 @@
+/*
+===============================================================================
+Bronze Layer - Table Creation
+===============================================================================
+Purpose:
+    This script creates the Bronze layer tables for the Brazilian E-Commerce
+    (Olist) Data Warehouse project.
 
+    The Bronze layer stores data from the original Olist CSV files with
+    minimal transformation. The purpose of this layer is to preserve the
+    source data and provide a reliable foundation for the Silver layer.
+
+Source Systems:
+    - CRM          : Customer and review information
+    - Sales        : Orders and order items
+    - Finance      : Payment information
+    - Product      : Product and seller information
+    - Reference    : Geographic and category reference data
+
+Important:
+    - No primary keys or foreign keys are defined in the Bronze layer.
+    - No business transformations are performed here.
+    - Data quality issues from the source are intentionally preserved
+      for investigation and cleansing in the Silver layer.
+===============================================================================
+*/
+
+
+/*
+===============================================================================
+1. CRM - Customer Information
+Source: olist_customers_dataset.csv
+===============================================================================
+*/
+
+IF OBJECT_ID('bronze.crm_cust_info', 'U') IS NOT NULL
+    DROP TABLE bronze.crm_cust_info;
+GO
+
+CREATE TABLE bronze.crm_cust_info
+(
+    customer_id         VARCHAR(32),
+    customer_unique_id  VARCHAR(32),
+    customer_zip_code   VARCHAR(5),
+    customer_city       VARCHAR(100),
+    customer_state      VARCHAR(2)
+);
+GO
+
+
+/*
+===============================================================================
+2. CRM - Customer Reviews
+Source: olist_order_reviews_dataset.csv
+
+Contains customer reviews associated with orders.
+===============================================================================
+*/
+
+IF OBJECT_ID('bronze.crm_cust_reviews', 'U') IS NOT NULL
+    DROP TABLE bronze.crm_cust_reviews;
+GO
+
+CREATE TABLE bronze.crm_cust_reviews
+(
+    review_id             VARCHAR(32),
+    order_id              VARCHAR(32),
+    review_score          INT,
+    review_title          VARCHAR(100),
+    review_message        VARCHAR(1000),
+    review_creation_date  DATETIME,
+    review_answer_date    DATETIME
+);
+GO
+
+
+/*
+===============================================================================
+3. Finance - Order Payments
+Source: olist_order_payments_dataset.csv
+
+Contains payment information associated with customer orders.
+===============================================================================
+*/
+
+IF OBJECT_ID('bronze.finance_ord_payments', 'U') IS NOT NULL
+    DROP TABLE bronze.finance_ord_payments;
+GO
+
+CREATE TABLE bronze.finance_ord_payments
+(
+    order_id              VARCHAR(32),
+    payment_sequential     INT,
+    payment_type           VARCHAR(32),
+    payment_installments   INT,
+    payment_value          DECIMAL(10,2)
+);
+GO
+
+
+/*
+===============================================================================
+4. Product - Seller Details
+Source: olist_sellers_dataset.csv
+
+Contains information about sellers participating in the Olist marketplace.
+===============================================================================
+*/
+
+IF OBJECT_ID('bronze.prd_seller_details', 'U') IS NOT NULL
+    DROP TABLE bronze.prd_seller_details;
+GO
+
+CREATE TABLE bronze.prd_seller_details
+(
+    seller_id              VARCHAR(32),
+    seller_zip_code_prefix  VARCHAR(5),
+    seller_city             VARCHAR(100),
+    seller_state            VARCHAR(2)
+);
+GO
+
+
+/*
+===============================================================================
+5. Product - Product Details
+Source: olist_products_dataset.csv
+
+Contains product attributes such as category, dimensions, weight,
+name length, description length, and number of product photos.
+===============================================================================
+*/
+
+IF OBJECT_ID('bronze.prd_item_details', 'U') IS NOT NULL
+    DROP TABLE bronze.prd_item_details;
+GO
+
+CREATE TABLE bronze.prd_item_details
+(
+    product_id                VARCHAR(32),
+    product_category_name     VARCHAR(100),
+    product_name_length       INT,
+    product_description_length INT,
+    product_photos_qty        INT,
+    product_weight_g          INT,
+    product_length_cm         INT,
+    product_height_cm         INT,
+    product_width_cm          INT
+);
+GO
+
+
+/*
+===============================================================================
+6. Product - Category Translation
+Source: product_category_name_translation.csv
+
+Maps Portuguese product category names to English category names.
+===============================================================================
+*/
+
+IF OBJECT_ID('bronze.prd_translations', 'U') IS NOT NULL
+    DROP TABLE bronze.prd_translations;
+GO
+
+CREATE TABLE bronze.prd_translations
+(
+    product_category_name          VARCHAR(100),
+    product_category_name_english  VARCHAR(100)
+);
+GO
+
+
+/*
+===============================================================================
+7. Reference - Geolocation
+Source: olist_geolocation_dataset.csv
+
+Contains geographic information associated with ZIP-code prefixes.
+===============================================================================
+*/
+
+IF OBJECT_ID('bronze.reference_geolocation', 'U') IS NOT NULL
+    DROP TABLE bronze.reference_geolocation;
+GO
+
+CREATE TABLE bronze.reference_geolocation
+(
+    geolocation_zip_code_prefix  VARCHAR(5),
+    geolocation_lat               DECIMAL(10,7),
+    geolocation_lng               DECIMAL(10,7),
+    geolocation_city              VARCHAR(100),
+    geolocation_state             VARCHAR(2)
+);
+GO
+
+
+/*
+===============================================================================
+8. Sales - Order Items
+Source: olist_order_items_dataset.csv
+
+Contains individual products included within customer orders.
+===============================================================================
+*/
+
+IF OBJECT_ID('bronze.sales_ord_items', 'U') IS NOT NULL
+    DROP TABLE bronze.sales_ord_items;
+GO
+
+CREATE TABLE bronze.sales_ord_items
+(
+    order_id              VARCHAR(32),
+    order_item_id         INT,
+    product_id            VARCHAR(32),
+    seller_id             VARCHAR(32),
+    shipping_limit_date   DATETIME,
+    price                 DECIMAL(10,2),
+    freight_value         DECIMAL(10,2)
+);
+GO
+
+
+/*
+===============================================================================
+9. Sales - Order Details
+Source: olist_orders_dataset.csv
+
+Contains order-level information including status and important
+order lifecycle timestamps.
+===============================================================================
+*/
+
+IF OBJECT_ID('bronze.sales_ord_details', 'U') IS NOT NULL
+    DROP TABLE bronze.sales_ord_details;
+GO
+
+CREATE TABLE bronze.sales_ord_details
+(
+    order_id                         VARCHAR(32),
+    customer_id                      VARCHAR(32),
+    order_status                     VARCHAR(50),
+    order_purchase_timestamp         DATETIME,
+    order_approved_at                DATETIME,
+    order_delivered_carrier_date     DATETIME,
+    order_delivered_customer_date    DATETIME,
+    order_estimated_delivery_date    DATETIME
+);
+GO
