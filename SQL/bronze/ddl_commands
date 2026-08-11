@@ -43,7 +43,7 @@ CREATE TABLE bronze.crm_cust_info
     customer_unique_id  VARCHAR(32),
     customer_zip_code   VARCHAR(5),
     customer_city       VARCHAR(100),
-    customer_state      VARCHAR(2)
+    customer_state      VARCHAR(20)
 );
 GO
 
@@ -63,13 +63,13 @@ GO
 
 CREATE TABLE bronze.crm_cust_reviews
 (
-    review_id             VARCHAR(32),
-    order_id              VARCHAR(32),
+    review_id             VARCHAR(50),
+    order_id              VARCHAR(50),
     review_score          INT,
     review_title          VARCHAR(100),
     review_message        VARCHAR(1000),
-    review_creation_date  DATETIME,
-    review_answer_date    DATETIME
+    review_creation_date  VARCHAR(50),
+    review_answer_date    VARCHAR(50)
 );
 GO
 
@@ -89,7 +89,7 @@ GO
 
 CREATE TABLE bronze.finance_ord_payments
 (
-    order_id              VARCHAR(32),
+    order_id              VARCHAR(50),
     payment_sequential     INT,
     payment_type           VARCHAR(32),
     payment_installments   INT,
@@ -113,10 +113,10 @@ GO
 
 CREATE TABLE bronze.prd_seller_details
 (
-    seller_id              VARCHAR(32),
-    seller_zip_code_prefix  VARCHAR(5),
+    seller_id              VARCHAR(50),
+    seller_zip_code_prefix  VARCHAR(10),
     seller_city             VARCHAR(100),
-    seller_state            VARCHAR(2)
+    seller_state            VARCHAR(20)
 );
 GO
 
@@ -137,7 +137,7 @@ GO
 
 CREATE TABLE bronze.prd_item_details
 (
-    product_id                VARCHAR(32),
+    product_id                VARCHAR(50),
     product_category_name     VARCHAR(100),
     product_name_length       INT,
     product_description_length INT,
@@ -186,14 +186,13 @@ GO
 
 CREATE TABLE bronze.reference_geolocation
 (
-    geolocation_zip_code_prefix  VARCHAR(5),
-    geolocation_lat               DECIMAL(10,7),
-    geolocation_lng               DECIMAL(10,7),
+    geolocation_zip_code_prefix  VARCHAR(10),
+    geolocation_lat               VARCHAR(50),
+    geolocation_lng               VARCHAR(50),
     geolocation_city              VARCHAR(100),
-    geolocation_state             VARCHAR(2)
+    geolocation_state             VARCHAR(20)
 );
 GO
-
 
 /*
 ===============================================================================
@@ -210,11 +209,11 @@ GO
 
 CREATE TABLE bronze.sales_ord_items
 (
-    order_id              VARCHAR(32),
+    order_id              VARCHAR(50),
     order_item_id         INT,
-    product_id            VARCHAR(32),
-    seller_id             VARCHAR(32),
-    shipping_limit_date   DATETIME,
+    product_id            VARCHAR(50),
+    seller_id             VARCHAR(50),
+    shipping_limit_date   VARCHAR(50),
     price                 DECIMAL(10,2),
     freight_value         DECIMAL(10,2)
 );
@@ -240,10 +239,10 @@ CREATE TABLE bronze.sales_ord_details
     order_id                         VARCHAR(32),
     customer_id                      VARCHAR(32),
     order_status                     VARCHAR(50),
-    order_purchase_timestamp         DATETIME,
-    order_approved_at                DATETIME,
-    order_delivered_carrier_date     DATETIME,
-    order_delivered_customer_date    DATETIME,
-    order_estimated_delivery_date    DATETIME
+    order_purchase_timestamp         VARCHAR(50),
+    order_approved_at                VARCHAR(50),
+    order_delivered_carrier_date     VARCHAR(50),
+    order_delivered_customer_date    VARCHAR(50),
+    order_estimated_delivery_date    VARCHAR(50)
 );
 GO
