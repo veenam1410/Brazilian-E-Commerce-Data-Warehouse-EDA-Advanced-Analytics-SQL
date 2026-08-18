@@ -1,4 +1,6 @@
 /* ============================================================
+   Analytics performed in this file are based on version 1
+
    1. OVERALL BUSINESS KPIs
    ============================================================ */
 
