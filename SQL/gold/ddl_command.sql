@@ -1,5 +1,17 @@
 /* ============================================================
-   GOLD LAYER
+   GOLD LAYER - VERSION 1
+   FACT GRAIN: ONE ROW PER ORDER
+   ============================================================
+
+   Two Gold-layer versions are maintained to demonstrate
+   different fact-table grains:
+
+   Version 1:
+   - fact_sales has one row per order.
+   - Order-level metrics such as total price, freight value,
+     and payment information are aggregated at the order level.
+   - Suitable for overall order-level analysis.
+
    ============================================================
    Purpose:
    - Create business-ready analytical views from the Silver layer.
