@@ -104,8 +104,6 @@ This allows the fact table to connect directly with:
 
 and supports more detailed product- and seller-level analysis.
 
-## Version 2 Star Schema
-
 ![Gold Layer Star Schema Version 2](documentation/Star_Schema_V2.png)
 
 ### Dimensions
