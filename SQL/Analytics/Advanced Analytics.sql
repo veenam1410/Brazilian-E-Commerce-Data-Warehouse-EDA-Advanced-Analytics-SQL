@@ -1,5 +1,6 @@
 /* ============================================================
    ADVANCED ANALYTICS
+   Analytics performed in this file are based on version 1
    ============================================================ */
 
 
