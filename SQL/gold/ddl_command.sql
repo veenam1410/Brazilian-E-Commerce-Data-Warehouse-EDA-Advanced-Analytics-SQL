@@ -1,11 +1,11 @@
 /* ============================================================
-   GOLD LAYER - DIMENSION AND FACT VIEWS
+   GOLD LAYER
    ============================================================
    Purpose:
-   - Transform Silver-layer data into business-ready analytical views.
-   - Create surrogate keys for dimensions and the sales fact.
-   - Combine related Silver tables based on their business relationships.
-   - Preserve the appropriate grain of each Gold object.
+   - Create business-ready analytical views from the Silver layer.
+   - Generate surrogate keys for dimensions and fact records.
+   - Apply business rules and enrich data for analytics.
+   - Maintain a clearly defined grain for each Gold object.
    ============================================================ */
 
 
@@ -15,13 +15,15 @@
    Grain:
    - One row per unique customer.
 
-   Transformations:
-   - customer_unique_id is used to identify the actual customer.
+   Business Logic:
+   - customer_unique_id represents the actual unique customer.
    - Multiple customer_id records can exist for the same
      customer_unique_id.
-   - The latest/highest customer_id is retained as the
+   - The record with the highest customer_id is retained as the
      representative customer record.
-   - A surrogate customer_key is generated for analytics.
+   - Customer location attributes are retained from the selected
+     record.
+   - A surrogate customer_key is generated for the Gold layer.
    ============================================================ */
 
 IF OBJECT_ID('gold.dim_customer', 'V') IS NOT NULL 
@@ -58,13 +60,15 @@ GO
    Grain:
    - One row per seller.
 
-   Transformations:
-   - Seller information is enriched with latitude and longitude.
-   - Multiple geolocation records can exist for the same ZIP code.
+   Business Logic:
+   - Seller information is enriched with latitude and longitude
+     from the geolocation reference data.
+   - A ZIP-code prefix can have multiple latitude/longitude
+     combinations.
    - One deterministic geolocation record is selected for each
-     ZIP-code prefix to prevent row multiplication.
-   - LEFT JOIN is used so sellers without matching geolocation
-     information are still retained.
+     ZIP-code prefix to prevent duplicate seller records.
+   - LEFT JOIN ensures sellers without matching geolocation data
+     are still retained.
    - A surrogate seller_key is generated.
    ============================================================ */
 
@@ -110,10 +114,11 @@ GO
    Grain:
    - One row per product.
 
-   Transformations:
-   - Product details are enriched with English category names
-     from the translation table.
-   - LEFT JOIN ensures products without a translation are retained.
+   Business Logic:
+   - Product details are enriched with English product category
+     names from the translation table.
+   - LEFT JOIN ensures products without a matching translation
+     are retained.
    - Missing category translations are represented as 'n/a'.
    - A surrogate product_key is generated.
    ============================================================ */
@@ -144,19 +149,24 @@ GO
    Grain:
    - One row per order.
 
-   Transformations:
-   - Order details form the base of the fact table.
-   - Order-item data is aggregated to order level before joining
-     to prevent row multiplication.
-   - Payment data is also aggregated to order level before joining.
-   - Review data is joined after Silver-layer deduplication,
-     where latest review is retained per order.
-   - Total items, price and freight are calculated at order level.
-   - Payment count, installments and total payment value are
-     calculated at order level.
+   Business Logic:
+   - sales_ord_details provides the base order-level information.
+   - Order-item data is aggregated to order level before joining.
+   - Payment data is aggregated to order level before joining.
+   - This prevents row multiplication caused by multiple items
+     and multiple payment records for the same order.
+   - Shipping limit date is represented using the earliest
+     shipping limit date for the order.
+   - Total items, price and freight value are calculated per order.
+   - Payment count, installments and payment value are calculated
+     per order.
+   - Review information is joined from the Silver review table,
+     which has already been reduced to one review per order.
    - Missing item-level measures are represented as 0.
    - Missing review IDs are represented as 'n/a' and missing
      review scores as 0.
+   - customer_id is mapped to customer_unique_id through the
+     Silver customer table to support customer-level analysis.
    - A surrogate order_key is generated.
    ============================================================ */
 
@@ -168,7 +178,7 @@ CREATE VIEW gold.fact_sales AS
 SELECT  
     ROW_NUMBER() OVER(ORDER BY od.order_id) AS order_key, 
     od.order_id, 
-    od.customer_id, 
+    c.customer_unique_id, 
     od.order_status, 
     od.order_purchase_timestamp, 
     od.order_approved_at, 
@@ -194,7 +204,7 @@ FROM silver.sales_ord_details AS od
 
 LEFT JOIN 
 ( 
-    /* Aggregate order-item data to order level */
+    /* Aggregate order-item data to one row per order */
     SELECT  
         order_id, 
         MIN(shipping_limit_date) AS shipping_limit_date, 
@@ -204,11 +214,11 @@ LEFT JOIN
     FROM silver.sales_ord_items 
     GROUP BY order_id 
 ) AS ot 
-    ON od.order_id = ot.order_id 
+ON od.order_id = ot.order_id 
 
 LEFT JOIN  
 ( 
-    /* Aggregate payment data to order level */
+    /* Aggregate payment data to one row per order */
     SELECT 
         order_id, 
         COUNT(*) AS payment_count, 
@@ -217,9 +227,13 @@ LEFT JOIN
     FROM silver.finance_ord_payments 
     GROUP BY order_id 
 ) AS f 
-    ON od.order_id = f.order_id 
+ON od.order_id = f.order_id 
 
-/* Reviews are already reduced to one review per order in Silver */
+/* Join the latest retained review for each order */
 LEFT JOIN silver.crm_cust_reviews AS r 
-    ON od.order_id = r.order_id; 
+    ON od.order_id = r.order_id 
+
+/* Map order customer_id to the actual unique customer */
+LEFT JOIN silver.crm_cust_info AS c 
+    ON c.customer_id = od.customer_id; 
 GO
