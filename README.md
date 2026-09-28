@@ -381,3 +381,11 @@ Business Insights
 ```
 
 The project highlights the ability to work with raw transactional data, build a structured data warehouse, design fact and dimension tables based on business grain, and perform analytical SQL to answer business questions.
+
+## 👩‍💻 Author
+
+### Veena M
+
+[LinkedIn](https://www.linkedin.com/in/veenam1410)
+
+[GitHub](https://github.com/veenam1410)
